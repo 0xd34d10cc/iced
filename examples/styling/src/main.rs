@@ -1,14 +1,17 @@
 use iced::{
+    image::{Image, Handle},
     button, scrollable, slider, text_input, Align, Button, Checkbox, Column,
     Container, Element, Length, ProgressBar, Radio, Row, Sandbox, Scrollable,
     Settings, Slider, Space, Text, TextInput,
 };
+use ::image::{load_from_memory_with_format, ImageFormat};
+
+const IMAGE_DATA: &[u8] = include_bytes!("image.png");
 
 pub fn main() {
     Styling::run(Settings::default())
 }
 
-#[derive(Default)]
 struct Styling {
     theme: style::Theme,
     scroll: scrollable::State,
@@ -18,6 +21,8 @@ struct Styling {
     slider: slider::State,
     slider_value: f32,
     toggle_value: bool,
+
+    image: Handle,
 }
 
 #[derive(Debug, Clone)]
@@ -33,7 +38,24 @@ impl Sandbox for Styling {
     type Message = Message;
 
     fn new() -> Self {
-        Styling::default()
+        let background = load_from_memory_with_format(IMAGE_DATA, ImageFormat::Png)
+            .unwrap()
+            .to_bgra();
+        let (width, height) = background.dimensions();
+        let pixels = background.into_raw();
+
+
+        Styling {
+            theme: Default::default(),
+            scroll: Default::default(),
+            input: Default::default(),
+            input_value: Default::default(),
+            button: Default::default(),
+            slider: Default::default(),
+            slider_value: Default::default(),
+            toggle_value: Default::default(),
+            image: Handle::from_pixels(width, height, pixels),
+        }
     }
 
     fn title(&self) -> String {
@@ -113,6 +135,7 @@ impl Sandbox for Styling {
             .padding(20)
             .max_width(600)
             .push(choose_theme)
+            .push(Image::new(self.image.clone()))
             .push(Row::new().spacing(10).push(text_input).push(button))
             .push(slider)
             .push(progress_bar)
